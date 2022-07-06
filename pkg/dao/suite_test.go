@@ -98,8 +98,8 @@ func (s *RepositorySuite) SetupTest() {
 
 	// Remove the content for the 3 involved tables
 	s.tx.Where("1=1").Delete(models.Rpm{})
-	s.tx.Where("1=1").Delete(models.Repository{})
 	s.tx.Where("1=1").Delete(models.RepositoryConfiguration{})
+	s.tx.Where("1=1").Delete(models.Repository{})
 }
 
 func (s *RepositorySuite) TearDownTest() {
@@ -124,8 +124,8 @@ func (s *RpmSuite) SetupTest() {
 
 	// Remove the content for the 3 involved tables
 	s.tx.Where("1=1").Delete(models.Rpm{})
-	s.tx.Where("1=1").Delete(models.Repository{})
 	s.tx.Where("1=1").Delete(models.RepositoryConfiguration{})
+	s.tx.Where("1=1").Delete(models.Repository{})
 
 	repo := repoTest1.DeepCopy()
 	if err := s.tx.Create(repo).Error; err != nil {

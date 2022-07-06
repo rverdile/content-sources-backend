@@ -36,6 +36,16 @@ func (r *MockRepositoryDao) Create(newRepo api.RepositoryRequest) (api.Repositor
 	}
 }
 
+func (r *MockRepositoryDao) BulkCreate(newRepo []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
+	args := r.Called(newRepo)
+	rr, ok := args.Get(0).([]api.RepositoryResponse)
+	if ok {
+		return rr, args.Error(1)
+	} else {
+		return nil, args.Error(1)
+	}
+}
+
 func (r *MockRepositoryDao) Update(orgID string, uuid string, repoParams api.RepositoryRequest) error {
 	args := r.Called(orgID, uuid, repoParams)
 	return args.Error(0)

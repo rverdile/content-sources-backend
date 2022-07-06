@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"strconv"
+
 	"github.com/content-services/content-sources-backend/pkg/api"
 	"github.com/content-services/content-sources-backend/pkg/models"
 	"github.com/content-services/content-sources-backend/pkg/seeds"
@@ -57,7 +59,7 @@ func (suite *RepositorySuite) TestRepositoryCreateAlreadyExists() {
 	err = tx.Limit(1).Find(&repo).Error
 	assert.NoError(t, err)
 
-	err = seeds.SeedRepositoryConfigurations(tx /*, &repo[0]*/, 1, seeds.SeedOptions{OrgID: org_id})
+	err = seeds.SeedRepositoryConfigurations(tx, 1, seeds.SeedOptions{OrgID: org_id})
 	assert.NoError(t, err)
 
 	found := models.RepositoryConfiguration{}
@@ -151,6 +153,39 @@ func (suite *RepositorySuite) TestRepositoryCreateBlankTest() {
 	}
 }
 
+func (suite *RepositorySuite) TestBulkCreate() {
+	t := suite.T()
+	tx := suite.tx
+
+	orgID := "1"
+	accountID := "2"
+
+	amountToCreate := 15
+
+	requests := make([]api.RepositoryRequest, amountToCreate)
+	for i := 0; i < amountToCreate; i++ {
+		name := "repo_" + strconv.Itoa(i)
+		url := "https://repo_" + strconv.Itoa(i)
+		requests[i] = api.RepositoryRequest{
+			Name:      &name,
+			URL:       &url,
+			OrgID:     &orgID,
+			AccountID: &accountID,
+		}
+	}
+
+	rr, err := GetRepositoryDao(suite.db).BulkCreate(requests)
+	assert.Nil(t, err)
+	assert.Equal(t, amountToCreate, len(rr))
+
+	for i := 0; i < amountToCreate; i++ {
+		var foundRepoConfig models.RepositoryConfiguration
+		result := tx.Where("URL ? = ", requests[i].URL).Find(&foundRepoConfig)
+		assert.Nil(t, result.Error)
+		assert.NotEmpty(t, foundRepoConfig.UUID)
+	}
+}
+
 func (suite *RepositorySuite) TestUpdate() {
 	name := "Updated"
 	url := "http://someUrl.com"
@@ -158,7 +193,7 @@ func (suite *RepositorySuite) TestUpdate() {
 	org_id := "900023"
 	var err error
 
-	err = seeds.SeedRepositoryConfigurations(suite.tx /*, &repo*/, 1, seeds.SeedOptions{OrgID: org_id})
+	err = seeds.SeedRepositoryConfigurations(suite.tx, 1, seeds.SeedOptions{OrgID: org_id})
 	assert.Nil(t, err)
 	found := models.RepositoryConfiguration{}
 	suite.tx.

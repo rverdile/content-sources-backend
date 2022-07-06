@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/content-services/content-sources-backend/pkg/api"
@@ -23,6 +24,7 @@ func RegisterRepositoryRoutes(engine *echo.Group, rDao *dao.RepositoryDao) {
 	engine.PATCH("/repositories/:uuid", rh.partialUpdate)
 	engine.DELETE("/repositories/:uuid", rh.deleteRepository)
 	engine.POST("/repositories/", rh.createRepository)
+	engine.POST("/repositories/bulk_create/", rh.bulkCreateRepositories)
 }
 
 func getAccountIdOrgId(c echo.Context) (string, string, error) {
@@ -93,6 +95,49 @@ func (rh *RepositoryHandler) createRepository(c echo.Context) error {
 	c.Response().Header().Set("Location", "/api/content_sources/v1.0/repositories/"+response.UUID)
 	return c.JSON(http.StatusCreated, response)
 
+}
+
+// CreateRepository godoc
+// @Summary      Bulk create repositories
+// @ID           bulkCreateRepositories
+// @Description  bulk create repositories
+// @Tags         repositories
+// @Accept       json
+// @Produce      json
+// @Param        body  body     api.RepositoryRequest  true  "request body"
+// @Success      201  {object}  api.RepositoryResponse
+// @Header       201  {string}  Location "resource URL"
+// @Router       /repositories/ [post]
+func (rh *RepositoryHandler) bulkCreateRepositories(c echo.Context) error {
+	var bulkCreateLimit = 20
+
+	var newRepositories []api.RepositoryRequest
+	if err := c.Bind(&newRepositories); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Error binding params: "+err.Error())
+	}
+
+	if bulkCreateLimit < len(newRepositories) {
+		limitErrMsg := fmt.Sprintf("Cannot create more than %d repositories at once.", bulkCreateLimit)
+		return echo.NewHTTPError(http.StatusRequestEntityTooLarge, limitErrMsg)
+	}
+
+	accountID, orgID, err := getAccountIdOrgId(c)
+	if err != nil {
+		return badIdentity(err)
+	}
+
+	for i := 0; i < len(newRepositories); i++ {
+		newRepositories[i].AccountID = &accountID
+		newRepositories[i].OrgID = &orgID
+		newRepositories[i].FillDefaults()
+	}
+
+	var response []api.RepositoryResponse
+	if response, err = rh.RepositoryDao.BulkCreate(newRepositories); err != nil {
+		return echo.NewHTTPError(httpCodeForError(err), err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, response)
 }
 
 // Get RepositoryResponse godoc
