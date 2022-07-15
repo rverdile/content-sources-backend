@@ -61,7 +61,7 @@ func (r repositoryDaoImpl) Create(newRepoReq api.RepositoryRequest) (api.Reposit
 	return created, nil
 }
 
-func (r repositoryDaoImpl) BulkCreate(newRepositories []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
+func (r repositoryDaoImpl) BulkCreate(tx *gorm.DB, newRepositories []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
 	size := len(newRepositories)
 	newRepoConfigs := make([]models.RepositoryConfiguration, size)
 	newRepos := make([]models.Repository, size)
@@ -74,14 +74,12 @@ func (r repositoryDaoImpl) BulkCreate(newRepositories []api.RepositoryRequest) (
 		ApiFieldsToModel(newRepositories[i], &newRepoConfigs[i], &newRepos[i])
 	}
 
-	tx := r.db.Begin()
 	for i := 0; i < size; i++ {
 
 		if err := tx.Where("url = ?", newRepos[i].URL).FirstOrCreate(&newRepos[i]).Error; err != nil {
 			dbErr := DBErrorToApi(err)
 			errContext := fmt.Sprintf("Error creating repository \"%s\"", newRepoConfigs[i].Name)
 			dbErr.Wrap(errContext)
-			tx.Rollback()
 			return nil, dbErr
 		}
 
@@ -90,11 +88,9 @@ func (r repositoryDaoImpl) BulkCreate(newRepositories []api.RepositoryRequest) (
 			dbErr := DBErrorToApi(err)
 			errContext := fmt.Sprintf("Error creating repository \"%s\"", newRepoConfigs[i].Name)
 			dbErr.Wrap(errContext)
-			tx.Rollback()
 			return nil, dbErr
 		}
 	}
-	tx.Commit()
 
 	created := convertToResponses(newRepoConfigs)
 	return created, nil

@@ -6,7 +6,9 @@ import (
 	"github.com/content-services/content-sources-backend/pkg/api"
 	"github.com/content-services/content-sources-backend/pkg/models"
 	"github.com/content-services/content-sources-backend/pkg/seeds"
+	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func (suite *RepositorySuite) TestCreate() {
@@ -174,16 +176,55 @@ func (suite *RepositorySuite) TestBulkCreate() {
 		}
 	}
 
-	rr, err := GetRepositoryDao(suite.db).BulkCreate(requests)
+	rr, err := GetRepositoryDao(tx).BulkCreate(tx, requests)
 	assert.Nil(t, err)
 	assert.Equal(t, amountToCreate, len(rr))
 
 	for i := 0; i < amountToCreate; i++ {
 		var foundRepoConfig models.RepositoryConfiguration
-		result := tx.Where("URL ? = ", requests[i].URL).Find(&foundRepoConfig)
+		result := tx.Where("name = ? ", requests[i].Name).Find(&foundRepoConfig)
 		assert.Nil(t, result.Error)
 		assert.NotEmpty(t, foundRepoConfig.UUID)
 	}
+}
+
+func (suite *RepositorySuite) TestBulkCreateOneFails() {
+	t := suite.T()
+	var rr []api.RepositoryResponse
+	var err error
+
+	orgID := "1"
+	accountID := "2"
+
+	requests := []api.RepositoryRequest{
+		{
+			Name:      pointy.String("repo_1"),
+			URL:       pointy.String("repo_1_url"),
+			OrgID:     &orgID,
+			AccountID: &accountID,
+		},
+		{
+			Name:      pointy.String(""),
+			URL:       pointy.String("repo_2_url"),
+			OrgID:     &orgID,
+			AccountID: &accountID,
+		},
+	}
+
+	err = suite.tx.Transaction(func(tx *gorm.DB) error {
+		rr, err = GetRepositoryDao(tx).BulkCreate(tx, requests)
+		return err
+	})
+	assert.Error(t, err)
+	assert.Equal(t, 0, len(rr))
+
+	daoError, ok := err.(*Error)
+	assert.True(t, ok)
+	assert.True(t, daoError.BadValidation)
+
+	foundRepoConfig := models.RepositoryConfiguration{}
+	err = suite.tx.First(&foundRepoConfig).Error
+	assert.Error(t, err)
 }
 
 func (suite *RepositorySuite) TestUpdate() {
