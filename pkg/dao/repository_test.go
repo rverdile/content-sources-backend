@@ -176,7 +176,7 @@ func (suite *RepositorySuite) TestBulkCreate() {
 		}
 	}
 
-	rr, err := GetRepositoryDao(tx).BulkCreate(tx, requests)
+	rr, err := GetRepositoryDao(tx).BulkCreate(requests)
 	assert.Nil(t, err)
 	assert.Equal(t, amountToCreate, len(rr))
 
@@ -212,7 +212,7 @@ func (suite *RepositorySuite) TestBulkCreateOneFails() {
 	}
 
 	err = suite.tx.Transaction(func(tx *gorm.DB) error {
-		rr, err = GetRepositoryDao(tx).BulkCreate(tx, requests)
+		rr, err = GetRepositoryDao(tx).BulkCreate(requests)
 		return err
 	})
 	assert.Error(t, err)

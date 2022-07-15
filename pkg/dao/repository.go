@@ -61,7 +61,20 @@ func (r repositoryDaoImpl) Create(newRepoReq api.RepositoryRequest) (api.Reposit
 	return created, nil
 }
 
-func (r repositoryDaoImpl) BulkCreate(tx *gorm.DB, newRepositories []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
+func (r repositoryDaoImpl) BulkCreate(newRepositories []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
+	var created = make([]api.RepositoryResponse, 0)
+	var err error
+
+	if err = r.db.Transaction(func(tx *gorm.DB) error {
+		created, err = r.bulkCreate(tx, newRepositories)
+		return err
+	}); err != nil {
+		return []api.RepositoryResponse{}, err
+	}
+	return created, err
+}
+
+func (r repositoryDaoImpl) bulkCreate(tx *gorm.DB, newRepositories []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
 	size := len(newRepositories)
 	newRepoConfigs := make([]models.RepositoryConfiguration, size)
 	newRepos := make([]models.Repository, size)
