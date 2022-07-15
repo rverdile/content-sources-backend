@@ -36,7 +36,7 @@ func (r *MockRepositoryDao) Create(newRepo api.RepositoryRequest) (api.Repositor
 	}
 }
 
-func (r *MockRepositoryDao) BulkCreate(tx *gorm.DB, newRepo []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
+func (r *MockRepositoryDao) BulkCreate(newRepo []api.RepositoryRequest) ([]api.RepositoryResponse, error) {
 	args := r.Called(newRepo)
 	if rr, ok := args.Get(0).([]api.RepositoryResponse); ok {
 		return rr, args.Error(1)

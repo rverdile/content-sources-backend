@@ -8,10 +8,8 @@ import (
 
 	"github.com/content-services/content-sources-backend/pkg/api"
 	"github.com/content-services/content-sources-backend/pkg/dao"
-	"github.com/content-services/content-sources-backend/pkg/db"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
-	"gorm.io/gorm"
 )
 
 type RepositoryHandler struct {
@@ -136,10 +134,9 @@ func (rh *RepositoryHandler) bulkCreateRepositories(c echo.Context) error {
 
 	var response []api.RepositoryResponse
 
-	if err = db.DB.Transaction(func(tx *gorm.DB) error {
-		response, err = rh.RepositoryDao.BulkCreate(tx, newRepositories)
-		return err
-	}); err != nil {
+	response, err = rh.RepositoryDao.BulkCreate(newRepositories)
+
+	if err != nil {
 		return echo.NewHTTPError(httpCodeForError(err), err.Error())
 	}
 
