@@ -74,6 +74,18 @@ func CheckSnapshotAccessible(ctx context.Context) (err error) {
 		return nil
 	} else {
 		return ce.NewErrorResponse(http.StatusBadRequest, "Cannot manage repository snapshots",
-			"Neither the user nor the account is allowed.")
+			"Neither the user nor account is not allowed.")
+	}
+}
+
+func CheckAdminTaskAccessible(ctx context.Context) (err error) {
+	if !config.Get().Features.AdminTasks.Enabled {
+		return ce.NewErrorResponse(http.StatusBadRequest, "Cannot manage admin tasks",
+			"Admin tasks feature is disabled.")
+	} else if accessible(ctx, config.Get().Features.AdminTasks) {
+		return nil
+	} else {
+		return ce.NewErrorResponse(http.StatusBadRequest, "Cannot manage admin tasks",
+			"Neither the user nor account is allowed.")
 	}
 }
