@@ -2,6 +2,8 @@ module github.com/content-services/content-sources-backend
 
 go 1.18
 
+replace github.com/content-services/zest/release/v3 => /home/rverdile/dev/zest/release
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/ProtonMail/go-crypto v0.0.0-20230331115716-d34776aa93ec
@@ -28,7 +30,7 @@ require (
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/viper v1.15.0
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/swag v1.8.12
 	github.com/ziflex/lecho/v3 v3.5.0
 	gorm.io/driver/postgres v1.4.8
@@ -77,7 +79,6 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	github.com/vektra/mockery v1.1.2 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 )
@@ -138,7 +139,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect

@@ -84,9 +84,10 @@ func SleepWithBackoff(iteration int) {
 
 func TaskErrorString(task zest.TaskResponse) string {
 	str := ""
-	for key, element := range task.Error {
-		str = str + fmt.Sprintf("%v: %v.  ", key, element)
-	}
+	//for key, element := range task.Error {
+	//	str = str + fmt.Sprintf("%v: %v.  ", key, element)
+	//}
+	str = fmt.Sprintf("traceback %v, description: %v", *task.Error.Traceback, *task.Error.Description)
 	return str
 }
 
