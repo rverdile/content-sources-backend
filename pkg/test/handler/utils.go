@@ -18,6 +18,7 @@ var MockIdentity = identity.XRHID{
 			OrgID: MockOrgId,
 		},
 		Type: "Associate",
+		User: identity.User{},
 	},
 }
 

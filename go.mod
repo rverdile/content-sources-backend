@@ -2,6 +2,8 @@ module github.com/content-services/content-sources-backend
 
 go 1.20
 
+replace github.com/content-services/tang => /home/rverdile/dev/tang
+
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/content-services/yummy v1.0.9

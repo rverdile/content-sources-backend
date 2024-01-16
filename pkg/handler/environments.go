@@ -8,6 +8,7 @@ import (
 	ce "github.com/content-services/content-sources-backend/pkg/errors"
 	"github.com/content-services/content-sources-backend/pkg/rbac"
 	"github.com/labstack/echo/v4"
+	"github.com/openlyinc/pointy"
 )
 
 type RepositoryEnvironmentHandler struct {
@@ -21,6 +22,7 @@ func RegisterRepositoryEnvironmentRoutes(engine *echo.Group, rDao *dao.DaoRegist
 
 	addRoute(engine, http.MethodGet, "/repositories/:uuid/environments", rh.listRepositoriesEnvironments, rbac.RbacVerbRead)
 	addRoute(engine, http.MethodPost, "/environments/names", rh.searchEnvironmentByName, rbac.RbacVerbRead)
+	addRoute(engine, http.MethodPost, "/snapshots/environments/names", rh.searchSnapshotEnvironments, rbac.RbacVerbRead)
 }
 
 // searchEnvironmentByName godoc
@@ -90,4 +92,28 @@ func (rh *RepositoryEnvironmentHandler) listRepositoriesEnvironments(c echo.Cont
 	}
 
 	return c.JSON(200, setCollectionResponseMetadata(&apiResponse, c, total))
+}
+
+func (rh *RepositoryEnvironmentHandler) searchSnapshotEnvironments(c echo.Context) error {
+	_, orgId := getAccountIdOrgId(c)
+	dataInput := api.SnapshotSearchRpmRequest{}
+
+	var err error
+	err = CheckSnapshotAccessible(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	if err = c.Bind(&dataInput); err != nil {
+		return ce.NewErrorResponse(http.StatusBadRequest, "Error binding parameters", err.Error())
+	}
+	if dataInput.Limit == nil || *dataInput.Limit > api.SearchRpmRequestLimitDefault {
+		dataInput.Limit = pointy.Pointer(api.SearchRpmRequestLimitDefault)
+	}
+
+	resp, err := rh.Dao.Environment.SearchSnapshotEnvironments(c.Request().Context(), orgId, dataInput)
+	if err != nil {
+		return ce.NewErrorResponse(http.StatusInternalServerError, "Error searching environments", err.Error())
+	}
+	return c.JSON(200, resp)
 }

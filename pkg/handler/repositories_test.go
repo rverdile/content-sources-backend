@@ -379,6 +379,12 @@ func (suite *ReposSuite) TestFetchNotFound() {
 
 func (suite *ReposSuite) TestCreate() {
 	t := suite.T()
+
+	config.Load()
+	config.Get().Features.Snapshots.Enabled = true
+	config.Get().Features.Snapshots.Accounts = &[]string{test_handler.MockAccountNumber}
+	defer resetFeatures()
+
 	config.Get().Clients.Pulp.Server = "some-server-address" // This ensures that PulpConfigured returns true
 	repoUuid := "repoUuid"
 	expected := api.RepositoryResponse{
