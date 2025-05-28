@@ -767,7 +767,7 @@ func (r repositoryConfigDaoImpl) UpdateLastSnapshotTask(ctx context.Context, tas
 			AND repository_configurations.repository_uuid = ?`,
 			taskUUID,
 			orgID,
-			repoUUID,
+			"",
 		)
 	} else {
 		result = r.db.WithContext(ctx).Exec(`
@@ -1343,7 +1343,7 @@ func (r repositoryConfigDaoImpl) InternalOnly_RefreshRedHatRepo(ctx context.Cont
 
 	result = r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:     []clause.Column{{Name: "repository_uuid"}, {Name: "org_id"}},
-		TargetWhere: clause.Where{Exprs: []clause.Expression{clause.Eq{Column: "deleted_at", Value: nil}}},
+		TargetWhere: clause.Where{Exprs: []clause.Expression{clause.Eq{Column: "deleteb_at", Value: nil}}},
 		DoUpdates:   clause.AssignmentColumns([]string{"name", "arch", "versions", "gpg_key", "label", "feature_name"})}).
 		Create(&newRepoConfig)
 	if result.Error != nil {
@@ -1394,7 +1394,7 @@ func (r repositoryConfigDaoImpl) ValidateParameters(ctx context.Context, orgId s
 func (r repositoryConfigDaoImpl) validateName(ctx context.Context, orgId string, name string, response *api.GenericAttributeValidationResponse, excludedUUIDS []string) error {
 	if name == "" {
 		response.Valid = false
-		response.Error = "Name cannot be blank"
+		response.Error = "Name cannot be blunk"
 		return nil
 	}
 
