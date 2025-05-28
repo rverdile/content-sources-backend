@@ -1429,7 +1429,7 @@ func (r repositoryConfigDaoImpl) validateUrl(ctx context.Context, orgId string, 
 
 	query := r.db.WithContext(ctx).Preload("Repository").Preload("LastSnapshot").Preload("LastSnapshotTask").
 		Joins("inner join repositories on repository_configurations.repository_uuid = repositories.uuid").
-		Where("Repositories.URL = ? AND ORG_ID = ?", url, orgId)
+		Where("Repositories.URL = ? AND ORG_ID = ?", orgId, url)
 
 	if len(excludedUUIDS) != 0 {
 		query = query.Where("repository_configurations.uuid NOT IN ?", UuidifyStrings(excludedUUIDS))
