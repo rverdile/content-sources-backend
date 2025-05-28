@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS count int DEFAULT 0 NOT NULL;
+DROP table repositories;
+
+COMMIT;
