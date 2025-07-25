@@ -43,6 +43,7 @@ type Clients struct {
 	RbacEnabled    bool           `mapstructure:"rbac_enabled"`
 	RbacBaseUrl    string         `mapstructure:"rbac_base_url"`
 	RbacTimeout    int            `mapstructure:"rbac_timeout"`
+	Kessel         Kessel         `mapstructure:"kessel"`
 	Pulp           Pulp           `mapstructure:"pulp"`
 	Redis          Redis          `mapstructure:"redis"`
 	Candlepin      Candlepin      `mapstructure:"candlepin"`
@@ -60,12 +61,37 @@ type Mocks struct {
 		// set the predefined response path for the indicated application
 		// Applications map[string]string
 	} `mapstructure:"rbac"`
+	Kessel MockKessel `mapstructure:"kessel"`
+}
+
+type MockKessel struct {
+	Enabled           bool                     `mapstructure:"enabled"`
+	RbacServer        string                   `mapstructure:"rbac_server"`
+	InventoryServer   string                   `mapstructure:"inventory_server"`
+	RequireAuth       bool                     `mapstructure:"require_auth"`
+	AuthTokens        []string                 `mapstructure:"auth_tokens"`
+	UserReadWrite     []string                 `mapstructure:"user_read_write"`
+	UserRead          []string                 `mapstructure:"user_read"`
+	UserNoPermissions []string                 `mapstructure:"user_no_permissions"`
+	Organizations     []MockKesselOrganization `mapstructure:"organizations"`
+}
+
+type MockKesselOrganization struct {
+	ID          string           `mapstructure:"id"`
+	WorkspaceID string           `mapstructure:"workspace_id"`
+	Users       []MockKesselUser `mapstructure:"users"`
+}
+
+type MockKesselUser struct {
+	ID          string   `mapstructure:"id"`
+	Permissions []string `mapstructure:"permissions"`
 }
 
 type FeatureSet struct {
 	Snapshots      Feature
 	AdminTasks     Feature `mapstructure:"admin_tasks"`
 	CommunityRepos Feature `mapstructure:"community_repos"`
+	Kessel         Feature `mapstructure:"kessel"`
 }
 
 type Feature struct {
@@ -120,6 +146,20 @@ type Roadmap struct {
 	Username string
 	Password string
 	Proxy    string
+}
+
+type Kessel struct {
+	Server   string        `mapstructure:"server"`
+	Auth     KesselAuth    `mapstructure:"auth"`
+	Insecure bool          `mapstructure:"insecure"`
+	Timeout  time.Duration `mapstructure:"timeout"`
+}
+
+type KesselAuth struct {
+	Enabled      bool   `mapstructure:"enabled"`
+	ClientID     string `mapstructure:"client_id"`
+	ClientSecret string `mapstructure:"client_secret"`
+	OIDCIssuer   string `mapstructure:"oidc_issuer"`
 }
 
 const RepoClowderBucketName = "content-sources-central-pulp-s3"
@@ -288,6 +328,13 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("clients.rbac_enabled", true)
 	v.SetDefault("clients.rbac_base_url", "http://rbac-service:8000/api/rbac/v1")
 	v.SetDefault("clients.rbac_timeout", 30)
+	v.SetDefault("clients.kessel.server", "")
+	v.SetDefault("clients.kessel.auth.enabled", false)
+	v.SetDefault("clients.kessel.auth.client_id", "")
+	v.SetDefault("clients.kessel.auth.client_secret", "")
+	v.SetDefault("clients.kessel.auth.oidc_issuer", "")
+	v.SetDefault("clients.kessel.insecure", true)
+	v.SetDefault("clients.kessel.timeout", 30)
 
 	v.SetDefault("clients.candlepin.server", "")
 	v.SetDefault("clients.candlepin.username", "")
@@ -366,6 +413,19 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("features.admin_tasks.organizations", nil)
 	v.SetDefault("features.admin_tasks.users", nil)
 	v.SetDefault("features.community_repos.enabled", false)
+	v.SetDefault("features.kessel.enabled", false)
+
+	// Mock Kessel configuration defaults
+	v.SetDefault("mocks.kessel.enabled", false)
+	v.SetDefault("mocks.kessel.rbac_server", "localhost:8080")
+	v.SetDefault("mocks.kessel.inventory_server", "localhost:9090")
+	v.SetDefault("mocks.kessel.require_auth", false)
+	v.SetDefault("mocks.kessel.auth_tokens", []string{"test-token", "valid-bearer-token"})
+	v.SetDefault("mocks.kessel.user_read_write", []string{"admin-user", "test-user"})
+	v.SetDefault("mocks.kessel.user_read", []string{"read-only-user", "viewer"})
+	v.SetDefault("mocks.kessel.user_no_permissions", []string{"blocked-user"})
+	v.SetDefault("mocks.kessel.organizations", []MockKesselOrganization{})
+
 	addEventConfigDefaults(v)
 	addStorageDefaults(v)
 }
@@ -581,6 +641,8 @@ func FeatureServiceConfigured() bool {
 func RoadmapConfigured() bool {
 	return Get().Clients.Roadmap.Server != ""
 }
+
+func KesselConfigured() bool { return Get().Clients.Kessel.Server != "" }
 
 func CustomHTTPErrorHandler(err error, c echo.Context) {
 	var code int

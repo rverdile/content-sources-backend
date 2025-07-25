@@ -148,6 +148,13 @@ clients:
     username:
     password:
     proxy:
+  kessel:
+    server:
+    auth:
+      enabled:
+      client_id:
+      client_secret:
+    insecure:
 
 
 # Configuration for the mocks
@@ -158,7 +165,28 @@ mocks:
     # Update with yout account number for viewer
     user_read: ["tdoe@example.com"]
     user_no_permissions: ["xdoe@example.com"]
-
+  kessel:
+      # Enable the mock Kessel service
+      enabled: false
+      # Server addresses (optional, defaults to localhost:8080 and localhost:9090)
+      rbac_server: "localhost:8080"
+      inventory_server: "localhost:9090"
+      # Authentication settings
+      require_auth: false
+      auth_tokens: ["test-token", "valid-bearer-token"]
+      # User permission categories (applied to all organizations)
+      user_read_write: ["admin-user", "test-user"]
+      user_read: ["read-only-user", "viewer"]
+      user_no_permissions: ["blocked-user"]
+      # Custom organizations with specific workspace and user configurations
+      organizations:
+        - id: "custom-org"
+          workspace_id: "custom-workspace-123"
+          users:
+            - id: "custom-admin"
+              permissions: ["content_sources_repositories_view", "content_sources_repositories_edit"]
+            - id: "custom-viewer"
+              permissions: ["content_sources_repositories_view"]
 features:
   snapshots:
     enabled: true
@@ -172,3 +200,5 @@ features:
     organizations: #["adminOrg"]
   community_repos:
     enabled: true
+  kessel:
+    enabled: false
